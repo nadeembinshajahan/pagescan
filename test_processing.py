@@ -5,7 +5,10 @@ Test script for PageScan processing pipeline.
 
 import sys
 import os
-sys.path.insert(0, '/home/user/pagescan')
+# Dynamic path setup
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 import numpy as np
 from PIL import Image
@@ -80,7 +83,9 @@ def test_image(image_path: str, output_prefix: str):
         print(f"Dewarping complete. Output size: {dewarped.shape[1]}x{dewarped.shape[0]}")
 
         # Save dewarped result
-        output_path = f"/home/user/pagescan/test_images/{output_prefix}_dewarped.jpg"
+        output_prefix_name = os.path.basename(output_prefix)
+        output_dir = os.path.dirname(image_path)
+        output_path = os.path.join(output_dir, f"{output_prefix_name}_dewarped.jpg")
         cv2.imwrite(output_path, cv2.cvtColor(dewarped, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 95])
         print(f"Saved: {output_path}")
     except Exception as e:
@@ -100,13 +105,13 @@ def test_image(image_path: str, output_prefix: str):
             print(f"Perspective correction complete. Output size: {corrected.shape[1]}x{corrected.shape[0]}")
 
             # Save perspective corrected result
-            output_path = f"/home/user/pagescan/test_images/{output_prefix}_perspective.jpg"
+            output_path = os.path.join(output_dir, f"{output_prefix_name}_perspective.jpg")
             cv2.imwrite(output_path, cv2.cvtColor(corrected, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 95])
             print(f"Saved: {output_path}")
 
             # Save corner preview
             preview = perspective_corrector.get_corner_preview(image, corners)
-            preview_path = f"/home/user/pagescan/test_images/{output_prefix}_corners_preview.jpg"
+            preview_path = os.path.join(output_dir, f"{output_prefix_name}_corners_preview.jpg")
             cv2.imwrite(preview_path, cv2.cvtColor(preview, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 95])
             print(f"Saved corner preview: {preview_path}")
         else:
@@ -131,7 +136,7 @@ def test_image(image_path: str, output_prefix: str):
         print(f"Full processing complete. Output size: {processed.shape[1]}x{processed.shape[0]}")
 
         # Save fully processed result
-        output_path = f"/home/user/pagescan/test_images/{output_prefix}_processed.jpg"
+        output_path = os.path.join(output_dir, f"{output_prefix_name}_processed.jpg")
         cv2.imwrite(output_path, cv2.cvtColor(processed, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 95])
         print(f"Saved: {output_path}")
 
@@ -167,9 +172,10 @@ def main():
     if not available_tests:
         print("No test images found. Looking for any images in test_images/")
         import glob
-        for ext in ['*.jpg', '*.jpeg', '*.png', '*.tiff']:
-            for path in glob.glob(f'/home/user/pagescan/test_images/{ext}'):
-                if '_processed' not in path and '_dewarped' not in path and '_perspective' not in path:
+        test_images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_images')
+        for ext in ['*.jpg', '*.jpeg', '*.png', '*.tiff', '*.JPG', '*.JPEG', '*.PNG', '*.TIFF']:
+            for path in glob.glob(os.path.join(test_images_dir, ext)):
+                if '_processed' not in path and '_dewarped' not in path and '_perspective' not in path and '_corners_preview' not in path:
                     available_tests.append((path, os.path.splitext(os.path.basename(path))[0]))
 
     if not available_tests:

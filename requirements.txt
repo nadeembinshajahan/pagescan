@@ -12,7 +12,7 @@ scipy>=1.10.0
 scikit-image>=0.21.0
 
 # RAW Image Support
-rawpy>=0.18.0
+# rawpy removed due to installation issues on mac
 imageio>=2.31.0
 
 # Image format support
